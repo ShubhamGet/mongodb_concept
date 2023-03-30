@@ -1,4 +1,5 @@
 const mongoose=require("mongoose")
+const validator=require("validator")
 mongoose.connect("mongodb://localhost:27017/shubham")
 .then(()=>console.log("Connection successful "))
 .catch((err)=>console.log(err));
@@ -12,11 +13,35 @@ mongoose.connect("mongodb://localhost:27017/shubham")
 const playlistSchema=new mongoose.Schema({
     name:{
         type:String,
-        required:true
+        required:true,
+        unique:true,
+        //lowercase:true,
+        upperCase:true,
+        minlength:[4,"Minimum 4 letter should be name"],
+        maxlength:30
     },
     ctype:String,
-    videos:Number,
+    videos:{
+       type: Number,
+       validate(value){
+        if(value<0){
+            throw new Error("Video number can't be in Negative ");
+        }
+
+       }
+    },
     author:String,
+    email:{
+        type:String,
+        required:true,
+        unique:true,
+
+        validate(value){
+            if(!validator.isEmail(value)){
+                throw new Error("Email is invalid")
+            }
+        }
+    },
     active:Boolean,
     date:{
         type:Date,
@@ -67,6 +92,7 @@ const createDocument=async()=>{
             ctype:"Database",
             videos:4,
             author:"Shubham Kumar Singh",
+            email:"shubhamsingh45@gmail.com",
             active:true,
         
         })
@@ -78,20 +104,24 @@ const createDocument=async()=>{
             active:true,
         
         })
-        const result= await Playlist.insertMany([jsPlaylist, mongoPlaylist, mongoosePlaylist, expressPlaylist]);
+        //const result= await Playlist.insertMany([jsPlaylist, mongoPlaylist, mongoosePlaylist, expressPlaylist]);
+
+        // working on only mongoosePlaylist
+        const result= await Playlist.insertMany([mongoosePlaylist]);
+
         console.log(result);
         
     } catch (error) {
         console.log(error);
     }
 }
-//createDocument();
+createDocument();
 
 const getDocument=async()=>{
     try{
         const result =await Playlist
         //.find({videos:{$gte:10}});// here, gte mean greater than equal to
-        //.find({ctype:{$in:["Back End"]}});// here, in means course type belongs to playlist or not s
+        //.find({ctype:{$in:["Back End"]}});// here, in operator means course type belongs to playlist or not s
         .find({ctype:{$in:["Front End"]}})
         console.log(result);
     }
@@ -100,4 +130,24 @@ const getDocument=async()=>{
     }
 }
 
-getDocument()
+//getDocument()
+
+// update the document 
+const updateDocument=async(_id)=>{
+    try {
+        const result=await Playlist.findByIdAndUpdate({_id},{
+            $set : {
+                name: "JAVAScript"
+            }
+        },{
+            useFindAndModify:false
+        });
+        console.log(result)
+        
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+//updateDocument("6422aba010bea69c10b70499");
+
